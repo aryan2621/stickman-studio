@@ -1,0 +1,179 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/source-serif-4";
+
+/*
+ * Design tokens. Dark is the default; light applies with data-theme="light" on <html>, which
+ * src/lib/theme.ts sets to follow macOS.
+ * Components use the Tailwind names below (bg-panel, text-muted, border-line, …), so a
+ * colour only ever changes here. Same palette as Capturita, Murmur and Relay.
+ */
+:root {
+  color-scheme: dark;
+  /* Claude Desktop's warm dark palette (same as Murmur, Relay and PortMan). */
+  --bg: #1f1e1d;
+  --panel: #262624;
+  --panel-2: #30302e;
+  --raised: #3a3936;
+  --stage: #171615;
+  --line: #3d3c38;
+  --line-strong: #4c4b46;
+  --fg: #f5f4ef;
+  --muted: #c2c0b6;
+  --subtle: #96948c;
+  --accent: #d97757;
+  --accent-hover: #c96442;
+  --accent-fg: #ffffff;
+  /* Status colours: a solid tone, a soft background and a readable text tone. */
+  --danger: #ef4444;
+  --danger-soft: rgb(236 138 128 / 0.14);
+  --danger-fg: #ec8a80;
+  --warning: #f59e0b;
+  --warning-soft: rgb(224 180 92 / 0.14);
+  --warning-fg: #e0b45c;
+  --success: #10b981;
+  --success-soft: rgb(143 193 138 / 0.14);
+  --success-fg: #8fc18a;
+  --shadow-lg: 0 20px 50px -12px rgb(0 0 0 / 0.6);
+  --scrollbar: #4c4b46;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+  /* Claude Desktop's paper palette. */
+  --bg: #f5f4ed;
+  --panel: #ffffff;
+  --panel-2: #f0eee6;
+  --raised: #e8e6dc;
+  --stage: #e8e6dc;
+  --line: #e8e6dc;
+  --line-strong: #d6d3c6;
+  --fg: #1f1e1d;
+  --muted: #5e5d59;
+  --subtle: #8a8880;
+  --accent: #c96442;
+  --accent-hover: #b4583a;
+  --danger-soft: rgb(181 51 51 / 0.1);
+  --danger-fg: #b53333;
+  --warning-soft: rgb(168 107 22 / 0.12);
+  --warning-fg: #8a5a12;
+  --success-soft: rgb(63 125 83 / 0.12);
+  --success-fg: #3f7d53;
+  --shadow-lg: 0 20px 50px -16px rgb(31 30 29 / 0.22);
+  --scrollbar: #d6d3c6;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-raised: var(--raised);
+  --color-stage: var(--stage);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-danger-fg: var(--danger-fg);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-warning-fg: var(--warning-fg);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-success-fg: var(--success-fg);
+  --shadow-panel: var(--shadow-lg);
+  --font-sans: "Inter Variable", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-serif: "Source Serif 4 Variable", Georgia, serif;
+  --font-mono: ui-monospace, Menlo, monospace;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* In the base layer so Tailwind's text-* and font-* utilities on controls still apply. */
+@layer base {
+  input,
+  select,
+  button,
+  textarea {
+    font: inherit;
+    color: inherit;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 70%, transparent);
+  outline-offset: 2px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar);
+  border-radius: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Text the user writes and edits can be selected. */
+textarea,
+input,
+.selectable {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+/* The macOS title bar overlays the window; this strip can drag it. */
+.drag {
+  -webkit-app-region: drag;
+}
+/* A control inside a drag strip must still take clicks. */
+.no-drag {
+  -webkit-app-region: no-drag;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, var(--panel-2) 0%, var(--raised) 50%, var(--panel-2) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s linear infinite;
+}
+
