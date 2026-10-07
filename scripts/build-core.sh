@@ -21,7 +21,7 @@ uv run python -m PyInstaller --onefile --clean --noconfirm --log-level WARN \
   --name stickman-core --distpath build/dist --workpath build/work --specpath build \
   --collect-all kokoro_onnx --collect-all espeakng_loader --collect-all language_tags \
   --collect-binaries imageio_ffmpeg --collect-binaries onnxruntime \
-  --collect-submodules keyring --copy-metadata keyring \
+  --collect-submodules keyring --copy-metadata keyring --collect-submodules truststore \
   core_entry.py
 
 mkdir -p "$(dirname "$OUT")"
