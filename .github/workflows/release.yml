@@ -1,0 +1,98 @@
+# Every push to main builds the macOS app and publishes it: a tag (v0.1.<run number>) and a
+# GitHub Release with the DMG to download. The app is ad-hoc signed (not notarized), so macOS
+# asks to confirm the first open; the release notes say how.
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# One release at a time, in push order.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # create the tag and the release
+
+jobs:
+  release:
+    runs-on: macos-15 # Apple silicon: the app, its engines and Metal are arm64-only
+    timeout-minutes: 120
+    env:
+      VERSION: 0.1.${{ github.run_number }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set the version
+        run: |
+          jq --arg v "$VERSION" '.version = $v' src-tauri/tauri.conf.json > tauri.conf.json.tmp
+          mv tauri.conf.json.tmp src-tauri/tauri.conf.json
+          echo "Building Stickman Studio $VERSION"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: core/uv.lock
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      # llama.cpp and stable-diffusion.cpp take ~15 minutes to compile; reuse them until their
+      # build scripts (which pin the versions) change.
+      - name: Cache the native engines
+        uses: actions/cache@v4
+        with:
+          path: |
+            src-tauri/binaries/llama-server-*
+            src-tauri/binaries/sd-server-*
+          key: engines-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/build-llama-server.sh', 'scripts/build-sd-server.sh') }}
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Builds the engines (unless cached), the Python core and the UI, then the app and its DMG.
+      - name: Build the app
+        run: pnpm tauri build --bundles dmg
+
+      - name: Find the DMG
+        id: dmg
+        run: |
+          dmg=$(ls src-tauri/target/release/bundle/dmg/*.dmg | head -1)
+          name="Stickman-Studio-$VERSION-arm64.dmg"
+          mv "$dmg" "$name"
+          echo "path=$name" >> "$GITHUB_OUTPUT"
+          ls -lh "$name"
+
+      - name: Tag and release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes=$(cat <<EOF
+          Stickman Studio $VERSION for Apple silicon Macs (macOS 14 or later), built from ${GITHUB_SHA::7}.
+
+          **Install:** open the DMG and drag Stickman Studio to Applications.
+
+          The app isn't notarized, so the first time macOS may say it "is damaged" or can't be checked. Clear that once with:
+
+              xattr -dr com.apple.quarantine "/Applications/Stickman Studio.app"
+
+          The AI models (about 13 GB) download inside the app on first run.
+
+          **Changes:** $(git log -1 --pretty=%s)
+          EOF
+          )
+          gh release create "v$VERSION" "${{ steps.dmg.outputs.path }}" \
+            --target "$GITHUB_SHA" \
+            --title "Stickman Studio $VERSION" \
+            --notes "$notes"
