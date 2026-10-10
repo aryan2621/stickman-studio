@@ -37,7 +37,8 @@ adapted from prompts for a cloud video model to a fully local, image-based pipel
 
 ## Requirements
 
-- macOS 14+ on Apple silicon, 16 GB of memory or more recommended.
+- macOS 14+ on Apple silicon, 16 GB of memory or more recommended. **macOS only:** drawing runs on
+  the Mac's GPU (Metal), so there's no Windows version yet.
 - About 10 GB of disk for the models, downloaded once on first launch (16 GB if you also add Gemma 4 12B).
 - Time: on an M3 Pro with 18 GB, a 60-second video takes about 20 minutes. Drawing is the slow part
   (about a minute a shot); planning takes under a minute, the voice seconds, the edit a minute
